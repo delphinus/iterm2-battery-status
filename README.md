@@ -7,7 +7,7 @@ A component to show battery status for iTerm2's status bar feature
 The latest [iTerm2][] (> v3.3.0) has a new feature: [Status Bar][]. iTerm2 has several components to show info from your Mac, but it lacks one from battery (v3.3.0 beta5, at least). This repo adds it.
 
 [iTerm2]: https://iterm2.com
-[StatusBar]: https://www.iterm2.com/3.3/documentation-status-bar.html
+[Status Bar]: https://www.iterm2.com/3.3/documentation-status-bar.html
 
 ## How to use
 
