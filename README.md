@@ -9,6 +9,15 @@ The latest [iTerm2][] (> v3.3.0) has a new feature: [Status Bar][]. iTerm2 has s
 [iTerm2]: https://iterm2.com
 [Status Bar]: https://www.iterm2.com/3.3/documentation-status-bar.html
 
+## Gallery
+
+* Charged  
+  <img width="127" alt="スクリーンショット 2019-05-05 16 54 17" src="https://user-images.githubusercontent.com/1239245/57190757-2da3e900-6f59-11e9-829d-ca3894353b9e.png">
+* Charging  
+  <img width="155" alt="スクリーンショット 2019-05-05 16 55 58" src="https://user-images.githubusercontent.com/1239245/57190760-31377000-6f59-11e9-8100-b8f7dab07354.png">
+* Discharging  
+  <img width="157" alt="スクリーンショット 2019-05-05 16 57 02" src="https://user-images.githubusercontent.com/1239245/57190764-32689d00-6f59-11e9-808f-4064bf734687.png">
+
 ## How to use
 
 You need to enable [Python API][] in iTerm2. Then, put scripts on this repo into the directory as below.
