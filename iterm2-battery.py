@@ -1,15 +1,42 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
+from functools import wraps
 from iterm2 import Connection, StatusBarComponent, StatusBarRPC, run_forever
 from iterm2.statusbar import Knob
 from math import floor
 from subprocess import CalledProcessError, check_output
-from typing import List
+from typing import Any, Callable, List, TypeVar, cast
 import re
 
 chars = ["▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 thunder = "ϟ"
 width = 5
+
+# ref https://github.com/python/mypy/issues/1551#issuecomment-253978622
+TFun = TypeVar("TFun", bound=Callable[..., Any])
+
+
+class memoize:
+    """
+    memoize is a decorator to cache the result value and reduce calling heavy
+    functions. The caches expires in 60 seconds.
+    """
+
+    memo = ""
+    calculated = float(0)
+    timeoutSeconds = 60
+
+    def __call__(self, function: TFun) -> TFun:
+        @wraps(function)
+        def wrapper() -> Any:
+            now = datetime.now().timestamp()
+            if now > self.calculated + self.timeoutSeconds:
+                self.memo = function()
+                self.calculated = now
+            return self.memo
+
+        return cast(TFun, wrapper)
 
 
 async def main(connection: Connection) -> None:
@@ -25,6 +52,10 @@ async def main(connection: Connection) -> None:
 
     @StatusBarRPC
     async def battery_status(knobs: List[Knob]) -> str:
+        return _battery_status()
+
+    @memoize()
+    def _battery_status() -> str:
         try:
             out: str = check_output(args=["/usr/bin/pmset", "-g", "batt"]).decode(
                 "utf-8"
