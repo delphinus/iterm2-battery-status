@@ -27,7 +27,7 @@ You need to enable [Python API][] in iTerm2. Then, run the install command as be
 ```sh
 cd /path/to/this/repo
 make install
-# This compiles dependencies and copy files into ~/Library/Application Support/iTerm2/Scripts/Autolaunch
+# This compiles dependencies and copy files into ~/Library/ApplicationSupport/iTerm2/Scripts/Autolaunch
 ```
 
 After restarting iTerm2, you can choose the battery component in preferences: **Preferences > Profiles > Session > Status bar enabled > Configure Status Bar**.
