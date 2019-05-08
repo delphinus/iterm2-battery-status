@@ -47,7 +47,6 @@ struct batteryInfo battery(void) {
 		setStrValue(&result.status, powerStatus);
 	} else {
 		setStrValue(&result.error, "Could not get power resource infomation");
-		return result;
 	}
 
 	if (powerInfo) CFRelease(powerInfo);
