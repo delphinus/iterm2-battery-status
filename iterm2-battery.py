@@ -77,7 +77,7 @@ async def main(connection: Connection) -> None:
 
         icon = "🔋"
         battery = _battery(result.status, result.percent)
-        time = _time(result.elaped, result.charging)
+        time = _time(result.elapsed, result.charging)
         return f"{icon} |{battery}| {result.percent:d}%{time}"
 
     def _battery(status: str, percent: int) -> str:
