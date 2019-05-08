@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 
-import ctypes
-
+from ctypes import Structure, c_char_p, c_int, cdll
 from datetime import datetime
 from functools import wraps
 from iterm2 import Connection, StatusBarComponent, StatusBarRPC, run_forever
 from iterm2.statusbar import Knob
 from math import floor
 from pathlib import Path
-from subprocess import CalledProcessError, check_output
 from typing import Any, Callable, List, TypeVar, cast
-import re
 
 chars = ["▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 thunder = "ϟ"
@@ -20,13 +17,13 @@ width = 5
 TFun = TypeVar("TFun", bound=Callable[..., Any])
 
 
-class battery_info(ctypes.Structure):
+class battery_info(Structure):
     _fields_ = [
-        ("percent", ctypes.c_int),
-        ("elapsed", ctypes.c_int),
-        ("charging", ctypes.c_int),
-        ("status", ctypes.c_char_p),
-        ("error", ctypes.c_char_p),
+        ("percent", c_int),
+        ("elapsed", c_int),
+        ("charging", c_int),
+        ("status", c_char_p),
+        ("error", c_char_p),
     ]
 
 
@@ -64,7 +61,7 @@ async def main(connection: Connection) -> None:
     plugged = "🔌"
 
     lib_path = Path(__file__).resolve().parent / "battery.so"
-    lib = ctypes.cdll.LoadLibrary(str(lib_path))
+    lib = cdll.LoadLibrary(str(lib_path))
     lib.battery.restype = battery_info
     lib.battery.argtypes = ()
 
