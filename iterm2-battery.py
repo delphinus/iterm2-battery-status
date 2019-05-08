@@ -96,11 +96,13 @@ async def main(connection: Connection) -> None:
         else:
             battery = " " * width
 
-        elapsed = "{0:d}:{1:02d}".format(*divmod(result.elapsed, 60))
-        last_status: str = "{0} |{1}| {2:d}% {3}".format(
-            "🔋", battery, result.percent, elapsed
-        )
-        return last_status
+        icon = "🔋"
+        if result.elapsed == 0:
+            elapsed = ""
+        else:
+            minutes, seconds = divmod(result.elapsed, 60)
+            elapsed = f" {minutes:d}:{seconds:02d}"
+        return f"{icon} |{battery}| {result.percent:d}%{elapsed}"
 
     await component.async_register(connection, battery_status, timeout=None)
 
