@@ -7,6 +7,7 @@ from functools import wraps
 from iterm2 import Connection, StatusBarComponent, StatusBarRPC, run_forever
 from iterm2.statusbar import Knob
 from math import floor
+from pathlib import Path
 from subprocess import CalledProcessError, check_output
 from typing import Any, Callable, List, TypeVar, cast
 import re
@@ -60,9 +61,9 @@ async def main(connection: Connection) -> None:
         "cx.remora.battery",
     )
     plugged = "🔌"
-    lib = ctypes.cdll.LoadLibrary(
-        "/Users/jinnouchi.yasushi/git/dotfiles/submodules/iterm2-battery-status/battery.so"
-    )
+
+    lib_path = Path(__file__).resolve().parent / "battery.so"
+    lib = ctypes.cdll.LoadLibrary(str(lib_path))
     lib.battery.restype = battery_info
     lib.battery.argtypes = ()
 
