@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import ctypes
+
 from datetime import datetime
 from functools import wraps
 from iterm2 import Connection, StatusBarComponent, StatusBarRPC, run_forever
@@ -30,6 +32,28 @@ class memoize:
     def __call__(self, function: TFun) -> TFun:
         @wraps(function)
         def wrapper() -> Any:
+            intp = ctypes.POINTER(ctypes.c_int)
+            charp = ctypes.POINTER(ctypes.c_char_p)
+            lib = ctypes.cdll.LoadLibrary(
+                "/Users/jinnouchi.yasushi/git/dotfiles/submodules/iterm2-battery-status/battery.so"
+            )
+            lib.battery.restype = None
+            lib.battery.argtypes = (intp, intp, charp, charp)
+            percent = ctypes.c_int()
+            elapsed = ctypes.c_int()
+            status = ctypes.c_char_p()
+            error = ctypes.c_char_p()
+            lib.battery(
+                ctypes.byref(percent),
+                ctypes.byref(elapsed),
+                ctypes.byref(status),
+                ctypes.byref(error),
+            )
+            print(percent.value)
+            print(elapsed.value)
+            print(status.value)
+            print(error.value)
+
             now = datetime.now().timestamp()
             if now > self.calculated + self.timeoutSeconds:
                 self.memo = function()
