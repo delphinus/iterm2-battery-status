@@ -24,6 +24,7 @@ class battery_info(ctypes.Structure):
     _fields_ = [
         ("percent", ctypes.c_int),
         ("elapsed", ctypes.c_int),
+        ("charging", ctypes.c_int),
         ("status", ctypes.c_char_p),
         ("error", ctypes.c_char_p),
     ]
@@ -97,13 +98,16 @@ async def main(connection: Connection) -> None:
         else:
             battery = " " * width
 
-        icon = "🔋"
-        if result.elapsed == 0:
-            elapsed = ""
+        if result.elapsed == 0 and result.charging == 0:
+            time = ""
+        elif result.elapsed == -1 or result.charging == -1:
+            time = " -:- "  # calculating
         else:
-            minutes, seconds = divmod(result.elapsed, 60)
-            elapsed = f" {minutes:d}:{seconds:02d}"
-        return f"{icon} |{battery}| {result.percent:d}%{elapsed}"
+            seconds = max(result.elapsed, result.charging)
+            time = " {0:d}:{1:02d}".format(*divmod(seconds, 60))
+
+        icon = "🔋"
+        return f"{icon} |{battery}| {result.percent:d}%{time}"
 
     await component.async_register(connection, battery_status, timeout=None)
 

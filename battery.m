@@ -5,6 +5,7 @@
 struct batteryInfo {
 	int percent;
 	int elapsed;
+	int charging;
 	char* status;
 	char* error;
 };
@@ -37,6 +38,9 @@ struct batteryInfo battery(void) {
 
 		powerSrcVal = CFDictionaryGetValue(powerSrcInfo, CFSTR(kIOPSTimeToEmptyKey));
 		CFNumberGetValue((CFNumberRef)powerSrcVal, kCFNumberIntType, &result.elapsed);
+
+		powerSrcVal = CFDictionaryGetValue(powerSrcInfo, CFSTR(kIOPSTimeToFullChargeKey));
+		CFNumberGetValue((CFNumberRef)powerSrcVal, kCFNumberIntType, &result.charging);
 
 		powerSrcVal = CFDictionaryGetValue(powerSrcInfo, CFSTR(kIOPSPowerSourceStateKey));
 		powerStatus = CFStringGetCStringPtr((CFStringRef)powerSrcVal, kCFStringEncodingUTF8);
