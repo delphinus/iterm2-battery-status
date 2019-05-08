@@ -2,13 +2,21 @@
 #import <IOKit/ps/IOPowerSources.h>
 #import <IOKit/ps/IOPSKeys.h>
 
+struct batteryInfo {
+	int percent;
+	int elapsed;
+	char* status;
+	char* error;
+};
+
 void setStrValue(char **dest, const char *src) {
 	int len = strlen(src) + 1;
 	*dest = (char*)calloc(len, sizeof(char));
 	strncpy(*dest, src, len);
 }
 
-void battery(int *percentage, int *elapsed, char **status, char **error) {
+struct batteryInfo battery(void) {
+	struct batteryInfo result = {};
 
 	CFTypeRef powerInfo = IOPSCopyPowerSourcesInfo();
 	CFArrayRef powerSrcList = IOPSCopyPowerSourcesList(powerInfo);
@@ -16,8 +24,8 @@ void battery(int *percentage, int *elapsed, char **status, char **error) {
 
 	if (!powerSrcList) {
 		if (powerInfo) CFRelease(powerInfo);
-		setStrValue(error, "Failed to get value from IOPSCopyPowerSourcesList()");
-		return;
+		setStrValue(&result.error, "Failed to get value from IOPSCopyPowerSourcesList()");
+		return result;
 	}
 
 	const void *powerSrcVal = NULL;
@@ -25,21 +33,22 @@ void battery(int *percentage, int *elapsed, char **status, char **error) {
 	if (CFArrayGetCount(powerSrcList)) {
 		powerSrcInfo = IOPSGetPowerSourceDescription(powerInfo, CFArrayGetValueAtIndex(powerSrcList, 0));
 		powerSrcVal = CFDictionaryGetValue(powerSrcInfo, CFSTR(kIOPSCurrentCapacityKey));
-		CFNumberGetValue((CFNumberRef)powerSrcVal, kCFNumberIntType, percentage);
+		CFNumberGetValue((CFNumberRef)powerSrcVal, kCFNumberIntType, &result.percent);
 
 		powerSrcVal = CFDictionaryGetValue(powerSrcInfo, CFSTR(kIOPSTimeToEmptyKey));
-		CFNumberGetValue((CFNumberRef)powerSrcVal, kCFNumberIntType, elapsed);
+		CFNumberGetValue((CFNumberRef)powerSrcVal, kCFNumberIntType, &result.elapsed);
 
 		powerSrcVal = CFDictionaryGetValue(powerSrcInfo, CFSTR(kIOPSPowerSourceStateKey));
 		powerStatus = CFStringGetCStringPtr((CFStringRef)powerSrcVal, kCFStringEncodingUTF8);
-		setStrValue(status, powerStatus);
+		setStrValue(&result.status, powerStatus);
 	} else {
-		setStrValue(error, "Could not get power resource infomation");
-		return;
+		setStrValue(&result.error, "Could not get power resource infomation");
+		return result;
 	}
 
     if (powerInfo) CFRelease(powerInfo);
     if (powerSrcList) CFRelease(powerSrcList);
+	return result;
 }
 
 // vim:se ts=4 sts=4 sw=4 noet:
