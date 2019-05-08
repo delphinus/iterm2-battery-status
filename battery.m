@@ -50,8 +50,8 @@ struct batteryInfo battery(void) {
 		return result;
 	}
 
-    if (powerInfo) CFRelease(powerInfo);
-    if (powerSrcList) CFRelease(powerSrcList);
+	if (powerInfo) CFRelease(powerInfo);
+	if (powerSrcList) CFRelease(powerSrcList);
 	return result;
 }
 
