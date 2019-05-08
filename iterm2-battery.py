@@ -41,17 +41,6 @@ class memoize:
     def __call__(self, function: TFun) -> TFun:
         @wraps(function)
         def wrapper() -> Any:
-            lib = ctypes.cdll.LoadLibrary(
-                "/Users/jinnouchi.yasushi/git/dotfiles/submodules/iterm2-battery-status/battery.so"
-            )
-            lib.battery.restype = battery_info
-            lib.battery.argtypes = ()
-            result = lib.battery()
-            print(result.percent)
-            print(result.elapsed)
-            print(result.status)
-            print(result.error)
-
             now = datetime.now().timestamp()
             if now > self.calculated + self.timeoutSeconds:
                 self.memo = function()
@@ -71,6 +60,11 @@ async def main(connection: Connection) -> None:
         "cx.remora.battery",
     )
     plugged = "🔌"
+    lib = ctypes.cdll.LoadLibrary(
+        "/Users/jinnouchi.yasushi/git/dotfiles/submodules/iterm2-battery-status/battery.so"
+    )
+    lib.battery.restype = battery_info
+    lib.battery.argtypes = ()
 
     @StatusBarRPC
     async def battery_status(knobs: List[Knob]) -> str:
@@ -78,35 +72,20 @@ async def main(connection: Connection) -> None:
 
     @memoize()
     def _battery_status() -> str:
-        try:
-            out: str = check_output(args=["/usr/bin/pmset", "-g", "batt"]).decode(
-                "utf-8"
-            )
-        except CalledProcessError as err:
-            return "`pmset` cannot be executed"
+        result = lib.battery()
 
-        matched1 = re.match(r".*; (.*);", out, flags=re.S)
-        if matched1:
-            status: str = matched1[1]
-        else:
-            return plugged
-
-        matched2 = re.match(r".*?(\d+)%", out, flags=re.S)
-        if matched2:
-            percent: int = int(matched2[1])
-        else:
-            return plugged
+        # TODO: reconsider conditions
 
         battery: str
-        if status == "charged":
+        if result.status == b"AC Power" and result.percent == 100:
             battery = width * chars[-1]
-        elif status == "charging":
+        elif result.status == b"AC Power":
             mid: int = floor(width / 2)
             battery = mid * " " + thunder + (width - mid - 1) * " "
-        elif status == "discharging":
+        elif result.status == b"Battery Power":
             unit: int = len(chars)
             total_char_len: int = len(chars) * width
-            char_len: int = floor(total_char_len * percent / 100)
+            char_len: int = floor(total_char_len * result.percent / 100)
             full_len: int = floor(char_len / unit)
             remained: int = char_len % unit
             space_len: int = width - full_len - (0 if remained == 0 else 1)
@@ -117,9 +96,10 @@ async def main(connection: Connection) -> None:
         else:
             battery = " " * width
 
-        matched = re.match(r".*?(\d+:\d+)", out, flags=re.S)
-        elapsed: str = matched[1] if matched and matched[1] != "0:00" else ""
-        last_status: str = "{0} |{1}| {2:d}% {3}".format("🔋", battery, percent, elapsed)
+        elapsed = "{0:d}:{1:02d}".format(*divmod(result.elapsed, 60))
+        last_status: str = "{0} |{1}| {2:d}% {3}".format(
+            "🔋", battery, result.percent, elapsed
+        )
         return last_status
 
     await component.async_register(connection, battery_status, timeout=None)
