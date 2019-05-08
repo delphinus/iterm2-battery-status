@@ -75,16 +75,21 @@ async def main(connection: Connection) -> None:
 
         # TODO: reconsider conditions
 
-        battery: str
-        if result.status == b"AC Power" and result.percent == 100:
-            battery = width * chars[-1]
-        elif result.status == b"AC Power":
+        icon = "🔋"
+        battery = _battery(result.status, result.percent)
+        time = _time(result.elaped, result.charging)
+        return f"{icon} |{battery}| {result.percent:d}%{time}"
+
+    def _battery(status: str, percent: int) -> str:
+        if status == b"AC Power" and percent == 100:
+            return width * chars[-1]
+        elif status == b"AC Power":
             mid: int = floor(width / 2)
-            battery = mid * " " + thunder + (width - mid - 1) * " "
-        elif result.status == b"Battery Power":
+            return mid * " " + thunder + (width - mid - 1) * " "
+        elif status == b"Battery Power":
             unit: int = len(chars)
             total_char_len: int = len(chars) * width
-            char_len: int = floor(total_char_len * result.percent / 100)
+            char_len: int = floor(total_char_len * percent / 100)
             full_len: int = floor(char_len / unit)
             remained: int = char_len % unit
             space_len: int = width - full_len - (0 if remained == 0 else 1)
@@ -92,19 +97,18 @@ async def main(connection: Connection) -> None:
             if remained != 0:
                 battery += chars[remained - 1]
             battery += " " * space_len
-        else:
-            battery = " " * width
+            return battery
 
-        if result.elapsed == 0 and result.charging == 0:
-            time = ""
-        elif result.elapsed == -1 or result.charging == -1:
-            time = " -:- "  # calculating
-        else:
-            seconds = max(result.elapsed, result.charging)
-            time = " {0:d}:{1:02d}".format(*divmod(seconds, 60))
+        return " " * width
 
-        icon = "🔋"
-        return f"{icon} |{battery}| {result.percent:d}%{time}"
+    def _time(elapsed: int, charging: int) -> str:
+        if elapsed == 0 and charging == 0:
+            return ""
+        elif elapsed == -1 or charging == -1:
+            return " -:- "  # calculating
+
+        seconds = max(elapsed, charging)
+        return " {0:d}:{1:02d}".format(*divmod(seconds, 60))
 
     await component.async_register(connection, battery_status, timeout=None)
 
