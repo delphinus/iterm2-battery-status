@@ -20,12 +20,14 @@ The latest [iTerm2][] (> v3.3.0) has a new feature: [Status Bar][]. iTerm2 has s
 
 ## How to use
 
-You need to enable [Python API][] in iTerm2. Then, put scripts on this repo into the directory as below.
+You need to enable [Python API][] in iTerm2. Then, run the install command as below.
 
 [Python API]: https://iterm2.com/python-api/
 
 ```sh
-cp iterm2-battery.py ~/Library/Application Support/iTerm2/Scripts/Autolaunch
+cd /path/to/this/repo
+make install
+# This compiles compiles dependencies and copy files into ~/Library/Application Support/iTerm2/Scripts/Autolaunch
 ```
 
 After restarting iTerm2, you can choose the battery component in preferences: **Preferences > Profiles > Session > Status bar enabled > Configure Status Bar**.

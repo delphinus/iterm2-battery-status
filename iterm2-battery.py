@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
+from ctypes import Structure, c_char_p, c_int, cdll
 from datetime import datetime
 from functools import wraps
 from iterm2 import Connection, StatusBarComponent, StatusBarRPC, run_forever
 from iterm2.statusbar import Knob
 from math import floor
-from subprocess import CalledProcessError, check_output
+from pathlib import Path
 from typing import Any, Callable, List, TypeVar, cast
-import re
 
 chars = ["▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 thunder = "ϟ"
@@ -15,6 +15,16 @@ width = 5
 
 # ref https://github.com/python/mypy/issues/1551#issuecomment-253978622
 TFun = TypeVar("TFun", bound=Callable[..., Any])
+
+
+class battery_info(Structure):
+    _fields_ = [
+        ("percent", c_int),
+        ("elapsed", c_int),
+        ("charging", c_int),
+        ("status", c_char_p),
+        ("error", c_char_p),
+    ]
 
 
 class memoize:
@@ -50,38 +60,33 @@ async def main(connection: Connection) -> None:
     )
     plugged = "🔌"
 
+    lib_path = Path(__file__).resolve().parent / "battery.so"
+    lib = cdll.LoadLibrary(str(lib_path))
+    lib.battery.restype = battery_info
+    lib.battery.argtypes = ()
+
     @StatusBarRPC
     async def battery_status(knobs: List[Knob]) -> str:
         return _battery_status()
 
     @memoize()
     def _battery_status() -> str:
-        try:
-            out: str = check_output(args=["/usr/bin/pmset", "-g", "batt"]).decode(
-                "utf-8"
-            )
-        except CalledProcessError as err:
-            return "`pmset` cannot be executed"
+        result = lib.battery()
 
-        matched1 = re.match(r".*; (.*);", out, flags=re.S)
-        if matched1:
-            status: str = matched1[1]
-        else:
-            return plugged
+        # TODO: reconsider conditions
 
-        matched2 = re.match(r".*?(\d+)%", out, flags=re.S)
-        if matched2:
-            percent: int = int(matched2[1])
-        else:
-            return plugged
+        icon = "🔋"
+        battery = _battery(result.status, result.percent)
+        time = _time(result.elapsed, result.charging)
+        return f"{icon} |{battery}| {result.percent:d}%{time}"
 
-        battery: str
-        if status == "charged":
-            battery = width * chars[-1]
-        elif status == "charging":
+    def _battery(status: str, percent: int) -> str:
+        if status == b"AC Power" and percent == 100:
+            return width * chars[-1]
+        elif status == b"AC Power":
             mid: int = floor(width / 2)
-            battery = mid * " " + thunder + (width - mid - 1) * " "
-        elif status == "discharging":
+            return mid * " " + thunder + (width - mid - 1) * " "
+        elif status == b"Battery Power":
             unit: int = len(chars)
             total_char_len: int = len(chars) * width
             char_len: int = floor(total_char_len * percent / 100)
@@ -92,13 +97,18 @@ async def main(connection: Connection) -> None:
             if remained != 0:
                 battery += chars[remained - 1]
             battery += " " * space_len
-        else:
-            battery = " " * width
+            return battery
 
-        matched = re.match(r".*?(\d+:\d+)", out, flags=re.S)
-        elapsed: str = matched[1] if matched and matched[1] != "0:00" else ""
-        last_status: str = "{0} |{1}| {2:d}% {3}".format("🔋", battery, percent, elapsed)
-        return last_status
+        return " " * width
+
+    def _time(elapsed: int, charging: int) -> str:
+        if elapsed == 0 and charging == 0:
+            return ""
+        elif elapsed == -1 or charging == -1:
+            return " -:- "  # calculating
+
+        seconds = max(elapsed, charging)
+        return " {0:d}:{1:02d}".format(*divmod(seconds, 60))
 
     await component.async_register(connection, battery_status, timeout=None)
 
