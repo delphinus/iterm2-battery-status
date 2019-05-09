@@ -51,6 +51,7 @@ class battery:
     width = 5
     lib_path = Path(__file__).resolve().parent / "battery.so"
     icon = "🔋"
+    plugged = "🔌"
 
     def __init__(self) -> None:
         self.lib = cdll.LoadLibrary(str(battery.lib_path))
@@ -59,6 +60,9 @@ class battery:
 
     def status(self) -> str:
         result = self.lib.battery()
+        if result.error is not None:
+            return battery.plugged
+
         bat = self._battery(result.status, result.percent)
         time = self._time(result.elapsed, result.charging)
         return f"{battery.icon} |{bat}| {result.percent:d}%{time}"
@@ -104,7 +108,6 @@ async def main(connection: Connection) -> None:
         "cx.remora.battery",
     )
     bat = battery()
-    plugged = "🔌"
 
     @StatusBarRPC
     async def battery_status(knobs: List[Knob]) -> str:
