@@ -2,7 +2,7 @@ AUTOLAUNCH_DIR = $(HOME)/Library/ApplicationSupport/iTerm2/Scripts/Autolaunch
 CC = gcc
 INSTALL = install
 LIB = battery.so
-PROGRAM = iterm2-battery.py
+PROGRAM = iterm2_battery.py
 RM = rm -f
 SRC = battery.m
 
