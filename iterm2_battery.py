@@ -120,4 +120,5 @@ async def main(connection: Connection) -> None:
     await component.async_register(connection, battery_status, timeout=None)
 
 
-run_forever(main)
+if __name__ == "__main__":
+    run_forever(main)
