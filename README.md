@@ -9,6 +9,14 @@ The latest [iTerm2][] (> v3.3.0) has a new feature: [Status Bar][]. iTerm2 has s
 [iTerm2]: https://iterm2.com
 [Status Bar]: https://www.iterm2.com/3.3/documentation-status-bar.html
 
+### Note for update: v3.3.0beta7
+
+The [changelog][] says that now the original distribution includes almost equivalent, but a native component for this. You should use that.
+
+Despite that, this repo should still be useful for people who want to create their original components for the statusbar.
+
+[changelog]: https://iterm2.com/downloads.html
+
 ## Gallery
 
 * Charged  
